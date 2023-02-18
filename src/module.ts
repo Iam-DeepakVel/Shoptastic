@@ -6,8 +6,9 @@ import cors from "cors";
 import { json, urlencoded } from "body-parser";
 import cookieSession from "cookie-session";
 import mongoose from "mongoose";
-import { errorHandler } from "@shoppingapp/common";
+import { currentUser, errorHandler } from "@shoppingapp/common";
 import { authRouters } from "./auth/auth.routers";
+import { sellerRouters } from "./seller/seller.routers";
 
 export class AppModule {
   constructor(public app: Application) {
@@ -30,9 +31,6 @@ export class AppModule {
       })
     );
 
-    app.use(authRouters);
-    app.use(errorHandler);
-
     Object.setPrototypeOf(this, AppModule.prototype);
   }
 
@@ -50,6 +48,11 @@ export class AppModule {
     } catch (error) {
       throw new Error("database connection error");
     }
+    // All routes need to use this currentUser router
+    this.app.use(currentUser(process.env.JWT_KEY!));
+    this.app.use(authRouters);
+    this.app.use(sellerRouters);
+    this.app.use(errorHandler);
 
     this.app.listen(8080, () =>
       console.log("Server is listening on port 8080")
